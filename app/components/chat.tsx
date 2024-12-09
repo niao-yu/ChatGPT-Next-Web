@@ -461,6 +461,7 @@ export function ChatActions(props: {
   showPromptHints: () => void;
   hitBottom: boolean;
   uploading: boolean;
+  inputRef: HTMLTextAreaElement | null;
   setShowShortcutKeyModal: React.Dispatch<React.SetStateAction<boolean>>;
   setUserInput: (input: string) => void;
   setShowChatSidePanel: React.Dispatch<React.SetStateAction<boolean>>;
@@ -628,6 +629,7 @@ export function ChatActions(props: {
                 session.clearContextIndex = session.messages.length;
                 session.memoryPrompt = ""; // will clear memory
               }
+              props.inputRef?.focus?.();
             });
           }}
         />
@@ -884,7 +886,14 @@ export function ShortcutKeyModal(props: { onClose: () => void }) {
       title: Locale.Chat.ShortcutKey.newChat,
       keys: isMac ? ["⌘", "Shift", "O"] : ["Ctrl", "Shift", "O"],
     },
-    { title: Locale.Chat.ShortcutKey.focusInput, keys: ["Shift", "Esc"] },
+    {
+      title: Locale.Chat.ShortcutKey.focusInput,
+      keys: isMac ? ["⌘", "/"] : ["Ctrl", "/"],
+    },
+    {
+      title: Locale.Chat.InputActions.Clear,
+      keys: isMac ? ["⌘", "\\"] : ["Ctrl", "\\"],
+    },
     {
       title: Locale.Chat.ShortcutKey.copyLastCode,
       keys: isMac ? ["⌘", "Shift", ";"] : ["Ctrl", "Shift", ";"],
@@ -895,7 +904,7 @@ export function ShortcutKeyModal(props: { onClose: () => void }) {
     },
     {
       title: Locale.Chat.ShortcutKey.showShortcutKey,
-      keys: isMac ? ["⌘", "/"] : ["Ctrl", "/"],
+      keys: isMac ? ["⌘", ","] : ["Ctrl", ","],
     },
   ];
   return (
@@ -1562,8 +1571,11 @@ function _Chat() {
           navigate(Path.Chat);
         }, 10);
       }
-      // 聚焦聊天输入 shift + esc
-      else if (event.shiftKey && event.key.toLowerCase() === "escape") {
+      // 聚焦聊天输入 command + /
+      else if (
+        (event.metaKey || event.ctrlKey) &&
+        ["/", "、"].includes(event.key)
+      ) {
         event.preventDefault();
         inputRef.current?.focus();
       }
@@ -1595,8 +1607,24 @@ function _Chat() {
           copyToClipboard(lastMessageContent);
         }
       }
-      // 展示快捷键 command + /
-      else if ((event.metaKey || event.ctrlKey) && event.key === "/") {
+      // 清除聊天 command + \
+      else if (
+        (event.metaKey || event.ctrlKey) &&
+        ["\\", "、"].includes(event.key)
+      ) {
+        event.preventDefault();
+        chatStore.updateTargetSession(session, (session) => {
+          if (session.clearContextIndex === session.messages.length) {
+            session.clearContextIndex = undefined;
+          } else {
+            session.clearContextIndex = session.messages.length;
+            session.memoryPrompt = ""; // will clear memory
+          }
+          inputRef.current?.focus?.();
+        });
+      }
+      // 展示快捷键 command + ,
+      else if ((event.metaKey || event.ctrlKey) && event.key === ",") {
         event.preventDefault();
         setShowShortcutKeyModal(true);
       }
@@ -1973,6 +2001,7 @@ function _Chat() {
                 scrollToBottom={scrollToBottom}
                 hitBottom={hitBottom}
                 uploading={uploading}
+                inputRef={inputRef.current}
                 showPromptHints={() => {
                   // Click again to close
                   if (promptHints.length > 0) {

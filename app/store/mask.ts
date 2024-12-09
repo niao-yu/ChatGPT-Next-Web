@@ -37,7 +37,15 @@ export const createEmptyMask = () =>
     id: nanoid(),
     avatar: DEFAULT_MASK_AVATAR,
     name: DEFAULT_TOPIC,
-    context: [],
+    context: [
+      {
+        id: "text-0",
+        role: "user",
+        content:
+          "请尽量使用中文回答，如果我发送的是纯英文，那可能是需要翻译或者程序代码的报错信息，需要帮我排查。",
+        date: "",
+      },
+    ],
     syncGlobalConfig: true, // use global config as default
     modelConfig: { ...useAppConfig.getState().modelConfig },
     lang: getLang(),
