@@ -884,23 +884,27 @@ export function ShortcutKeyModal(props: { onClose: () => void }) {
   const shortcuts = [
     {
       title: Locale.Chat.ShortcutKey.newChat,
-      keys: isMac ? ["⌘", "Shift", "O"] : ["Ctrl", "Shift", "O"],
+      keys: isMac ? ["⌘", "T"] : ["Ctrl", "T"],
     },
     {
       title: Locale.Chat.ShortcutKey.focusInput,
-      keys: isMac ? ["⌘", "/"] : ["Ctrl", "/"],
+      keys: isMac ? ["⌘", "l"] : ["Ctrl", "l"],
     },
     {
       title: Locale.Chat.InputActions.Clear,
-      keys: isMac ? ["⌘", "\\"] : ["Ctrl", "\\"],
+      keys: isMac ? ["⌘", "/"] : ["Ctrl", "/"],
     },
+    // {
+    //   title: Locale.Chat.ShortcutKey.copyLastCode,
+    //   keys: isMac ? ["⌘", "Shift", ";"] : ["Ctrl", "Shift", ";"],
+    // },
+    // {
+    //   title: Locale.Chat.ShortcutKey.copyLastMessage,
+    //   keys: isMac ? ["⌘", "Shift", "C"] : ["Ctrl", "Shift", "C"],
+    // },
     {
-      title: Locale.Chat.ShortcutKey.copyLastCode,
-      keys: isMac ? ["⌘", "Shift", ";"] : ["Ctrl", "Shift", ";"],
-    },
-    {
-      title: Locale.Chat.ShortcutKey.copyLastMessage,
-      keys: isMac ? ["⌘", "Shift", "C"] : ["Ctrl", "Shift", "C"],
+      title: "关闭当前会话",
+      keys: isMac ? ["⌘", "w"] : ["Ctrl", "w"],
     },
     {
       title: Locale.Chat.ShortcutKey.showShortcutKey,
@@ -1559,59 +1563,52 @@ function _Chat() {
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {
-      // 打开新聊天 command + shift + o
-      if (
-        (event.metaKey || event.ctrlKey) &&
-        event.shiftKey &&
-        event.key.toLowerCase() === "o"
-      ) {
+      // 打开新聊天 command + t
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "t") {
         event.preventDefault();
         setTimeout(() => {
           chatStore.newSession();
           navigate(Path.Chat);
         }, 10);
       }
-      // 聚焦聊天输入 command + /
+      // 聚焦聊天输入 command + l
       else if (
         (event.metaKey || event.ctrlKey) &&
-        ["/", "、"].includes(event.key)
+        event.key.toLowerCase() === "l"
       ) {
         event.preventDefault();
         inputRef.current?.focus();
       }
       // 复制最后一个代码块 command + shift + ;
-      else if (
-        (event.metaKey || event.ctrlKey) &&
-        event.shiftKey &&
-        event.code === "Semicolon"
-      ) {
-        event.preventDefault();
-        const copyCodeButton =
-          document.querySelectorAll<HTMLElement>(".copy-code-button");
-        if (copyCodeButton.length > 0) {
-          copyCodeButton[copyCodeButton.length - 1].click();
-        }
-      }
+      // else if (
+      //   (event.metaKey || event.ctrlKey) &&
+      //   event.shiftKey &&
+      //   event.code === "Semicolon"
+      // ) {
+      //   event.preventDefault();
+      //   const copyCodeButton =
+      //     document.querySelectorAll<HTMLElement>(".copy-code-button");
+      //   if (copyCodeButton.length > 0) {
+      //     copyCodeButton[copyCodeButton.length - 1].click();
+      //   }
+      // }
       // 复制最后一个回复 command + shift + c
-      else if (
-        (event.metaKey || event.ctrlKey) &&
-        event.shiftKey &&
-        event.key.toLowerCase() === "c"
-      ) {
-        event.preventDefault();
-        const lastNonUserMessage = messages
-          .filter((message) => message.role !== "user")
-          .pop();
-        if (lastNonUserMessage) {
-          const lastMessageContent = getMessageTextContent(lastNonUserMessage);
-          copyToClipboard(lastMessageContent);
-        }
-      }
-      // 清除聊天 command + \
-      else if (
-        (event.metaKey || event.ctrlKey) &&
-        ["\\", "、"].includes(event.key)
-      ) {
+      // else if (
+      //   (event.metaKey || event.ctrlKey) &&
+      //   event.shiftKey &&
+      //   event.key.toLowerCase() === "c"
+      // ) {
+      //   event.preventDefault();
+      //   const lastNonUserMessage = messages
+      //     .filter((message) => message.role !== "user")
+      //     .pop();
+      //   if (lastNonUserMessage) {
+      //     const lastMessageContent = getMessageTextContent(lastNonUserMessage);
+      //     copyToClipboard(lastMessageContent);
+      //   }
+      // }
+      // 清除聊天 command + /
+      else if ((event.metaKey || event.ctrlKey) && event.key === "/") {
         event.preventDefault();
         chatStore.updateTargetSession(session, (session) => {
           if (session.clearContextIndex === session.messages.length) {
@@ -1622,6 +1619,14 @@ function _Chat() {
           }
           inputRef.current?.focus?.();
         });
+      }
+      // 关闭当前会话 command + w
+      else if (
+        (event.metaKey || event.ctrlKey) &&
+        event.key.toLowerCase() === "w"
+      ) {
+        event.preventDefault();
+        chatStore.deleteSession(chatStore.currentSessionIndex);
       }
       // 展示快捷键 command + ,
       else if ((event.metaKey || event.ctrlKey) && event.key === ",") {
